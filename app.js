@@ -283,4 +283,83 @@
     }, 80);
   }
 
+  // ── Overlay ─────────────────────────────────────────────────────────────────
+  function showOverlay(html) {
+    overlayEl.innerHTML = html;
+    overlayEl.classList.remove('hidden');
+  }
+  function hideOverlay() {
+    overlayEl.innerHTML = '';
+    overlayEl.classList.add('hidden');
+  }
+
+  // ── Title screen ─────────────────────────────────────────────────────────────
+  function showTitle() {
+    showOverlay(`
+<h1>T H E &nbsp; S N A K E</h1>
+<p>Original: Commodore Plus/4 &middot; Alexander JUNG</p>
+<p class="dim">Port: JavaScript / CSS</p>
+<p>&nbsp;</p>
+<p>Press <b>any key</b> to start</p>
+    `);
+    function onKey() {
+      document.removeEventListener('keydown', onKey);
+      hideOverlay();
+      showDifficulty();
+    }
+    document.addEventListener('keydown', onKey);
+  }
+
+  // ── Difficulty screen ─────────────────────────────────────────────────────────
+  function showDifficulty() {
+    showOverlay(`
+<h1>SELECT DIFFICULTY</h1>
+<p><b>1</b> &middot; Easy &nbsp;&nbsp; &mdash; max snake: 70</p>
+<p><b>2</b> &middot; Medium &mdash; max snake: 90</p>
+<p><b>3</b> &middot; Hard &nbsp;&nbsp; &mdash; max snake: 110</p>
+<p>&nbsp;</p>
+<p class="dim">Arrow keys / WASD to steer</p>
+<p class="dim">Eat <b style="color:#ff0">*</b> to grow &middot; reach max length to open exit <b style="color:#0ff">O</b></p>
+<p class="dim">Exit = bonus life + next level</p>
+    `);
+    function onKey(e) {
+      const ml = e.key === '1' ? 70 : e.key === '2' ? 90 : e.key === '3' ? 110 : 0;
+      if (!ml) return;
+      document.removeEventListener('keydown', onKey);
+      hideOverlay();
+      maxLen = ml;
+      score = 0; lives = 5; phase = 1;
+      initLevel();
+      startLoop();
+    }
+    document.addEventListener('keydown', onKey);
+  }
+
+  // ── Game over screen ──────────────────────────────────────────────────────────
+  function showGameOver() {
+    clearLoop();
+    showOverlay(`
+<h1>G A M E &nbsp; O V E R</h1>
+<p>&nbsp;</p>
+<p>  .--.</p>
+<p>  |  |   R . I . P .</p>
+<p>  |  |</p>
+<p>  |  |   THE SNAKE</p>
+<p>  '--'</p>
+<p>&nbsp;</p>
+<p>Final score: <b>${score}</b></p>
+<p>&nbsp;</p>
+<p>Press <b>any key</b> to play again</p>
+    `);
+    function onKey() {
+      document.removeEventListener('keydown', onKey);
+      hideOverlay();
+      showDifficulty();
+    }
+    document.addEventListener('keydown', onKey);
+  }
+
+  // ── Start ─────────────────────────────────────────────────────────────────────
+  showTitle();
+
 })();

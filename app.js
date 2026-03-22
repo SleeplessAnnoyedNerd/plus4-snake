@@ -101,4 +101,35 @@
     }
   }
 
+  // ── Audio ──────────────────────────────────────────────────────────────────────────
+  let audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playTone(freq, duration, type = 'square', vol = 0.15) {
+    try {
+      const ctx = getAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration);
+    } catch (_) {}
+  }
+  const SFX = {
+    tick:    () => playTone(800, 0.02, 'square', 0.05),
+    eat:     () => playTone(400, 0.08, 'square', 0.2),
+    death:   () => {
+      playTone(200, 0.5, 'sawtooth', 0.3);
+      setTimeout(() => playTone(150, 0.4, 'sawtooth', 0.2), 200);
+    },
+    levelup: () => {
+      [523, 659, 784, 1047].forEach((f, i) =>
+        setTimeout(() => playTone(f, 0.12, 'square', 0.2), i * 120));
+    },
+  };
+
 })();

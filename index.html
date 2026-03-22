@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Snake</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000;
+      color: #ccc;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    #status {
+      width: calc(40 * 1ch);
+      background: #ccc;
+      color: #000;
+      font-family: monospace;
+      font-size: 1rem;
+      padding: 0 4px;
+      white-space: pre;
+      user-select: none;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(40, 1ch);
+      grid-template-rows: repeat(23, 1.2em);
+      line-height: 1.2em;
+      font-family: monospace;
+      font-size: 1rem;
+      position: relative;
+    }
+    #grid div {
+      width: 1ch;
+      height: 1.2em;
+      text-align: center;
+      overflow: hidden;
+    }
+    /* Cell types */
+    #grid div.wall   { color: #fff; }
+    #grid div.food   { color: #ff0; }
+    #grid div.exit   { color: #0ff; }
+    #grid div.snake  { color: #0c0; }
+    #grid div.head   { color: #0f0; }
+    /* Overlay */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      color: #0f0;
+      font-family: monospace;
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      white-space: pre;
+    }
+    #overlay.hidden { display: none; }
+    #overlay h1 { color: #fff; margin-bottom: 1em; letter-spacing: 0.3em; }
+    #overlay p  { margin: 0.2em 0; }
+    #overlay .dim { color: #555; }
+  </style>
+</head>
+<body>
+  <div id="status"></div>
+  <div id="grid">
+    <div id="overlay"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

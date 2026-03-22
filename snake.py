@@ -249,7 +249,12 @@ class Game:
       ord('d'): RIGHT, ord('D'): RIGHT,
     }
 
-    deadline = time.monotonic() + TICK
+    def _tick(dir_):
+      # Horizontal moves use half the tick interval to compensate for the
+      # ~2:1 height-to-width aspect ratio of terminal character cells.
+      return TICK * 0.5 if dir_[1] != 0 else TICK
+
+    deadline = time.monotonic() + _tick(direction)
 
     while True:
       now = time.monotonic()
@@ -267,7 +272,7 @@ class Game:
         continue
 
       # ── Game tick ───────────────────────────────────────────────────────────
-      deadline = now + TICK
+      deadline = now + _tick(direction)
 
       # Block 180° reversal
       new_dir = requested if requested != OPPOSITE[direction] else direction

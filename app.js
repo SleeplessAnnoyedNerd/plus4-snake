@@ -157,7 +157,7 @@
   };
   document.addEventListener('keydown', e => {
     const nd = KEY_MAP[e.key];
-    if (nd && !isOpposite(nd, direction)) { requestedDir = nd; e.preventDefault(); }
+    if (nd && direction && !isOpposite(nd, direction)) { requestedDir = nd; e.preventDefault(); }
   });
 
   // ── Food ───────────────────────────────────────────────────────────────────

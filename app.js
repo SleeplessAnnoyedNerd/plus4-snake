@@ -50,9 +50,9 @@
 
   // ── Status bar ───────────────────────────────────────────────────────────────
   function drawStatus(score, lives, phase) {
-    const raw = ' SCORE:' + String(score).padStart(5, '0') +
+    const raw = ' SCORE:' + String(score).padStart(5) +
                 '  LIVES:' + lives +
-                '  LEVEL:' + String(phase).padStart(2, '0') +
+                '  LEVEL:' + String(phase).padStart(2) +
                 '  THE SNAKE ';
     statusEl.textContent = raw.padEnd(COLS, ' ').slice(0, COLS);
   }

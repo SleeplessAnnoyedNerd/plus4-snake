@@ -132,4 +132,155 @@
     },
   };
 
+  // ── Directions ─────────────────────────────────────────────────────────────
+  const UP = [-1, 0], DOWN = [1, 0], LEFT = [0, -1], RIGHT = [0, 1];
+  function isOpposite(a, b) { return a[0] === -b[0] && a[1] === -b[1]; }
+  const CORNERS = {
+    [[-1,0]+','+[0,1]]:   '╰',  // UP + RIGHT
+    [[-1,0]+','+[0,-1]]:  '╯',  // UP + LEFT
+    [[1,0]+','+[0,1]]:    '╭',  // DOWN + RIGHT
+    [[1,0]+','+[0,-1]]:   '╮',  // DOWN + LEFT
+    [[0,-1]+','+[-1,0]]:  '╯',  // LEFT + UP
+    [[0,-1]+','+[1,0]]:   '╮',  // LEFT + DOWN
+    [[0,1]+','+[-1,0]]:   '╰',  // RIGHT + UP
+    [[0,1]+','+[1,0]]:    '╭',  // RIGHT + DOWN
+  };
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let snake, direction, requestedDir, prevDir, grow;
+  let score, lives, phase, maxLen, exitOpen, loopId;
+
+  // ── Input ──────────────────────────────────────────────────────────────────
+  const KEY_MAP = {
+    ArrowUp: UP, ArrowDown: DOWN, ArrowLeft: LEFT, ArrowRight: RIGHT,
+    w: UP, W: UP, s: DOWN, S: DOWN, a: LEFT, A: LEFT, d: RIGHT, D: RIGHT,
+  };
+  document.addEventListener('keydown', e => {
+    const nd = KEY_MAP[e.key];
+    if (nd && !isOpposite(nd, direction)) { requestedDir = nd; e.preventDefault(); }
+  });
+
+  // ── Food ───────────────────────────────────────────────────────────────────
+  function placeFood() {
+    const empty = [];
+    for (let r = 1; r < ROWS - 1; r++)
+      for (let c = 1; c < COLS - 1; c++)
+        if (lgrid[r][c] === G_EMPTY) empty.push([r, c]);
+    if (!empty.length) return;
+    const [r, c] = empty[Math.floor(Math.random() * empty.length)];
+    setCell(r, c, G_FOOD, 'food', '*');
+  }
+
+  // ── Level init ─────────────────────────────────────────────────────────────
+  function initLevel() {
+    snake = [[START_R, START_C]];
+    direction = UP;
+    requestedDir = UP;
+    prevDir = UP;
+    grow = 5;
+    exitOpen = false;
+    setupBoard(phase);
+    placeFood();
+    drawStatus(score, lives, phase);
+    setCell(START_R, START_C, G_SNAKE, 'head', '@');
+  }
+
+  // ── Body char ──────────────────────────────────────────────────────────────
+  function bodyChar(pd, nd) {
+    if (pd[0] === nd[0] && pd[1] === nd[1])
+      return nd[1] === 0 ? '│' : '─';
+    return CORNERS[pd.toString() + ',' + nd.toString()] || '─';
+  }
+
+  // ── Tick ───────────────────────────────────────────────────────────────────
+  function tick() {
+    // Apply direction (block 180° reversal)
+    if (!isOpposite(requestedDir, direction)) {
+      prevDir = direction;
+      direction = requestedDir;
+    }
+
+    const [hr, hc] = snake[0];
+    // Replace old head cell with correct body/corner character
+    setCell(hr, hc, G_SNAKE, 'snake', bodyChar(prevDir, direction));
+
+    // New head position
+    const nr = hr + direction[0];
+    const nc = hc + direction[1];
+    const cell = lgrid[nr][nc];
+
+    if (cell === G_EXIT) {
+      score += phase * 10;
+      lives += 1;
+      phase += 1;
+      SFX.levelup();
+      clearLoop();
+      setTimeout(() => { initLevel(); startLoop(); }, 600);
+      return;
+    }
+
+    if (cell === G_WALL || cell === G_SNAKE) {
+      SFX.death();
+      lives -= 1;
+      clearLoop();
+      setTimeout(() => deathAnimation(() => {
+        if (lives <= 0) showGameOver();
+        else { initLevel(); startLoop(); }
+      }), 50);
+      return;
+    }
+
+    // Move: push new head
+    snake.unshift([nr, nc]);
+    setCell(nr, nc, G_SNAKE, 'head', '@');
+
+    if (cell === G_FOOD) {
+      score += 10;
+      grow = 5;
+      SFX.eat();
+      placeFood();
+    } else {
+      // Normal move: erase tail unless growing
+      if (grow >= 0) {
+        grow--;
+      } else {
+        const [tr, tc] = snake.pop();
+        clearCell(tr, tc);
+      }
+    }
+
+    SFX.tick();
+    drawStatus(score, lives, phase);
+
+    // Open exit when max length reached
+    if (!exitOpen && snake.length >= maxLen) {
+      exitOpen = true;
+      setCell(EXIT_R, EXIT_C_POS, G_EXIT, 'exit', 'O');
+    }
+  }
+
+  // ── Loop ───────────────────────────────────────────────────────────────────
+  function startLoop() { loopId = setInterval(tick, TICK_MS); }
+  function clearLoop() { clearInterval(loopId); loopId = null; }
+
+  // ── Death animation ────────────────────────────────────────────────────────
+  function deathAnimation(cb) {
+    const [hr, hc] = snake[0];
+    let i = 0;
+    const flash = setInterval(() => {
+      cells[hr][hc].textContent = i % 2 === 0 ? '!' : '@';
+      cells[hr][hc].className   = i % 2 === 0 ? 'food' : 'head';
+      if (++i >= 8) {
+        clearInterval(flash);
+        const segs = [...snake].reverse();
+        let j = 0;
+        const unwind = setInterval(() => {
+          if (j >= segs.length) { clearInterval(unwind); setTimeout(cb, 300); return; }
+          const [r, c] = segs[j++];
+          clearCell(r, c);
+        }, 30);
+      }
+    }, 80);
+  }
+
 })();
